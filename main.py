@@ -34,6 +34,10 @@ aes_key = privateCrypt.get_aes_key()
 
 s_title = '茅台预约成功'
 s_content = ""
+cur_date = datetime.date.today()
+reservation_time_limit = int((datetime.datetime(year=cur_date.year, month=cur_date.month, day=cur_date.day) -
+                              datetime.timedelta(days=2)).timestamp() * 1000)
+reservation_map = {1: '申购失败', 0: '申购中'}
 
 for section in configs.sections():
     if (configs.get(section, 'enddate') != 9) and (TODAY > configs.get(section, 'enddate')):
@@ -81,5 +85,24 @@ for section in configs.sections():
         print(e)
         logging.error(e)
 
+    # 查询申购结果
+    # ret = process.query_history_reservation(mobile)
+    # if ret['code'] != 2000:
+    #     logging.error(f'{mobile} 查询申购单失败: {ret}')
+    #     s_content += f'申购单：{mobile} 查询申购结果失败：{ret}'
+    #     continue
+    # reservations = list(filter(lambda x: x['reservationTime'] >= reservation_time_limit, ret['data']['reservationItemVOS']))
+    ret = process.query_recent_reservation(mobile)
+    if ret['code'] != 2000:
+        logging.error(f'{mobile} 查询申购单失败: {ret}')
+        s_content += f'申购单：{mobile} 查询申购结果失败：{ret}'
+        continue
+    reservations = list(filter(lambda x: x['reservationTime'] >= reservation_time_limit, ret['data']['reservationItemVOS']))
+    reservations = '\n'.join(map(lambda x: f'申购单：{mobile}; 时间: {datetime.datetime.fromtimestamp(x["reservationTime"] / 1000).strftime("%Y-%m-%d %H:%M:%S")}; '
+                                      f'商品: {x["itemName"]}; 结果: {reservation_map.get(x["status"], "申购结果未知")}',
+                            reservations))
+    s_content += reservations + '\n'
+
 # 推送消息
+logging.info(s_content)
 process.send_msg(s_title, s_content)

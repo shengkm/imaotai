@@ -61,7 +61,6 @@ MT-Request-ID: 167560018873318465
 MT-APP-Version: 1.3.7
 User-Agent: iOS;16.3;Apple;?unrecognized?
 MT-R: clips_OlU6TmFRag5rCXwbNAQ/Tz1SKlN8THcecBp/HGhHdw==
-Content-Length: 93
 Accept-Encoding: gzip, deflate, br
 Connection: keep-alive
 Content-Type: application/json
@@ -336,3 +335,21 @@ def getUserEnergyAward(mobile: str):
     # response.json().get('message') if '无法领取奖励' in response.text else "领取奖励成功"
     logging.info(
         f'领取耐力 : mobile:{mobile} :  response code : {response.status_code}, response body : {response.text}')
+
+
+# 查询历史预约结果
+def query_history_reservation(mobile: str):
+    url = 'https://app.moutai519.com.cn/xhr/front/mall/reservation/list/more/queryV2?lastReserveId=&reservationId='
+    response = requests.get(url, headers=headers)
+    response = response.json()
+    logging.info(f'查询历史申购单： mobile: {mobile}  :  response code : {response["code"]}')
+    return response
+
+
+# 查询近期预约结果
+def query_recent_reservation(mobile: str):
+    url = 'https://app.moutai519.com.cn/xhr/front/mall/reservation/list/pageOne/queryV2'
+    response = requests.get(url, headers=headers)
+    response = response.json()
+    logging.info(f'查询近期申购单： mobile: {mobile}  :  response code : {response["code"]}')
+    return response
